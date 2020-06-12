@@ -3,6 +3,8 @@ import cv2
 import os
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from keras.preprocessing.image import ImageDataGenerator
+from keras.utils.np_utils import to_categorical
 
 path = "myData"
 testRatio = 0.2
@@ -44,11 +46,37 @@ for x in range(0, numOfClasses):
     numOfSamples.append(len(np.where(y_train == x)[0]))
 print(numOfSamples)
 
-plt.figure(figsize=(10,5))
-plt.bar(range(0,numOfClasses), numOfSamples)
+plt.figure(figsize=(10, 5))
+plt.bar(range(0, numOfClasses), numOfSamples)
 plt.title("Number of Images for each class")
 plt.xlabel("Class ID")
 plt.ylabel("Number of Images")
 plt.show()
 
+
+def preprocessing(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.equalizeHist(img)
+    img = img / 255
+    return img
+
+X_train = np.array(list(map(preprocessing, X_train)))
+X_test = np.array(list(map(preprocessing, X_test)))
+X_validation = np.array(list(map(preprocessing, X_validation)))
+
+
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2], 1))
+X_validation = X_validation.reshape((X_validation.shape[0], X_validation.shape[1], X_validation.shape[2], 1))
+
+
+dataGen = ImageDataGenerator(width_shift_range=0.1,
+                             height_shift_range=0.1,
+                             zoom_range=0.2,
+                             shear_range=0.1,
+                             rotation_range=10)
+dataGen.fit(X_train)
+y_train = to_categorical(y_train, numOfClasses)
+y_test = to_categorical(y_test, numOfClasses)
+y_validation = to_categorical(y_validation, numOfClasses)
 
