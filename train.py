@@ -5,10 +5,15 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
+from keras.models import Sequential
+from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Flatten
+from keras.optimizers import Adam
 
 path = "myData"
 testRatio = 0.2
 valRatio = 0.2
+imageDimensions = (32, 32, 3)
 
 images = []
 classNum = []
@@ -23,7 +28,7 @@ for x in range(0, numOfClasses):
     myPicList = os.listdir(path + "/" + str(x))
     for y in myPicList:
         curentImg = cv2.imread(path + "/" + str(x) + "/" + y)
-        curentImg = cv2.resize(curentImg, (32, 32))
+        curentImg = cv2.resize(curentImg, (imageDimensions[0], imageDimensions[1]))
         images.append(curentImg)
         classNum.append(x)
     print(x, end=" ")
@@ -60,15 +65,14 @@ def preprocessing(img):
     img = img / 255
     return img
 
+
 X_train = np.array(list(map(preprocessing, X_train)))
 X_test = np.array(list(map(preprocessing, X_test)))
 X_validation = np.array(list(map(preprocessing, X_validation)))
 
-
 X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2], 1))
 X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2], 1))
 X_validation = X_validation.reshape((X_validation.shape[0], X_validation.shape[1], X_validation.shape[2], 1))
-
 
 dataGen = ImageDataGenerator(width_shift_range=0.1,
                              height_shift_range=0.1,
@@ -79,4 +83,36 @@ dataGen.fit(X_train)
 y_train = to_categorical(y_train, numOfClasses)
 y_test = to_categorical(y_test, numOfClasses)
 y_validation = to_categorical(y_validation, numOfClasses)
+
+
+def myModel():
+    numOfFilters = 60
+    sizeOfFilter1 = (5, 5)
+    sizeOfFilter2 = (3, 3)
+    sizeOfPool = (2, 2)
+    numOfNodes = 500
+
+    model = Sequential()
+    model.add((Conv2D(numOfFilters, sizeOfFilter1, input_shape=(imageDimensions[0],
+                                                                imageDimensions[1],
+                                                                1),activation='relu')))
+    model.add((Conv2D(numOfFilters, sizeOfFilter1, activation='relu')))
+    model.add(MaxPooling2D(pool_size=sizeOfPool))
+    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
+    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
+    model.add(MaxPooling2D(pool_size=sizeOfPool))
+    model.add(Dropout(0.5))
+
+    model.add(Flatten())
+    model.add(Dense(numOfNodes, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(numOfClasses, activation='softmax'))
+    model.compile(Adam(learning_rate=0.001), loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+model = myModel()
+print(model.summary())
+
+model.fit_generator()
 
