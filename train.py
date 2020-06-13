@@ -10,10 +10,15 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.optimizers import Adam
 
+import pickle
+
 path = "myData"
 testRatio = 0.2
 valRatio = 0.2
 imageDimensions = (32, 32, 3)
+batchSizeVal = 50
+epochsVal = 10
+stepsPerEpoch = 2000
 
 images = []
 classNum = []
@@ -95,11 +100,11 @@ def myModel():
     model = Sequential()
     model.add((Conv2D(numOfFilters, sizeOfFilter1, input_shape=(imageDimensions[0],
                                                                 imageDimensions[1],
-                                                                1),activation='relu')))
+                                                                1), activation='relu')))
     model.add((Conv2D(numOfFilters, sizeOfFilter1, activation='relu')))
     model.add(MaxPooling2D(pool_size=sizeOfPool))
-    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
-    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
+    model.add((Conv2D(numOfFilters // 2, sizeOfFilter2, activation='relu')))
+    model.add((Conv2D(numOfFilters // 2, sizeOfFilter2, activation='relu')))
     model.add(MaxPooling2D(pool_size=sizeOfPool))
     model.add(Dropout(0.5))
 
@@ -111,8 +116,33 @@ def myModel():
                   metrics=['accuracy'])
     return model
 
+
 model = myModel()
 print(model.summary())
 
-model.fit_generator()
 
+history = model.fit_generator(dataGen.flow(X_train, y_train, batch_size=batchSizeVal), steps_per_epoch=stepsPerEpoch,
+                              epochs=epochsVal, validation_data=(X_validation, y_validation),
+                              shuffle=1)
+plt.figure(1)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['training', 'validation'])
+plt.title("Loss")
+plt.xlabel("Epochs")
+
+plt.figure(1)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.legend(['training', 'validation'])
+plt.title("Accuracy")
+plt.xlabel("Epochs")
+plt.show()
+
+score = model.evaluate(X_test, y_test, verbose=0)
+print("Test Score = ", score[0])
+print("Test Accuracy = ", score[1])
+
+pickle_out = open("model_trained.p", "wb")
+pickle.dump(model, pickle_out)
+pickle_out.close()
