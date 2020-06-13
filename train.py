@@ -1,16 +1,15 @@
 import numpy as np
 import cv2
+import pickle
 import os
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
 from keras.models import Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.optimizers import Adam
-
-import pickle
 
 path = "myData"
 testRatio = 0.2
@@ -119,7 +118,6 @@ def myModel():
 
 model = myModel()
 print(model.summary())
-
 
 history = model.fit_generator(dataGen.flow(X_train, y_train, batch_size=batchSizeVal), steps_per_epoch=stepsPerEpoch,
                               epochs=epochsVal, validation_data=(X_validation, y_validation),
