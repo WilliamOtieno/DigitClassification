@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 import cv2
 import pickle
 import os
@@ -10,6 +11,8 @@ from keras.models import Sequential
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.optimizers import Adam
+
+sess = tf.compat.v1.Session()
 
 path = "myData"
 testRatio = 0.2
@@ -119,28 +122,30 @@ def myModel():
 model = myModel()
 print(model.summary())
 
-history = model.fit_generator(dataGen.flow(X_train, y_train, batch_size=batchSizeVal), steps_per_epoch=stepsPerEpoch,
-                              epochs=epochsVal, validation_data=(X_validation, y_validation),
-                              shuffle=1)
-plt.figure(1)
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.legend(['training', 'validation'])
-plt.title("Loss")
-plt.xlabel("Epochs")
+with tf.device('/gpu:0'):
 
-plt.figure(1)
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
-plt.legend(['training', 'validation'])
-plt.title("Accuracy")
-plt.xlabel("Epochs")
-plt.show()
+    history = model.fit_generator(dataGen.flow(X_train, y_train, batch_size=batchSizeVal), steps_per_epoch=stepsPerEpoch,
+                                  epochs=epochsVal, validation_data=(X_validation, y_validation),
+                                  shuffle=1)
+    plt.figure(1)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.legend(['training', 'validation'])
+    plt.title("Loss")
+    plt.xlabel("Epochs")
 
-score = model.evaluate(X_test, y_test, verbose=0)
-print("Test Score = ", score[0])
-print("Test Accuracy = ", score[1])
+    plt.figure(1)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.legend(['training', 'validation'])
+    plt.title("Accuracy")
+    plt.xlabel("Epochs")
+    plt.show()
 
-pickle_out = open("model_trained.p", "wb")
-pickle.dump(model, pickle_out)
-pickle_out.close()
+    score = model.evaluate(X_test, y_test, verbose=0)
+    print("Test Score = ", score[0])
+    print("Test Accuracy = ", score[1])
+
+    pickle_out = open("model_trained.p", "wb")
+    pickle.dump(model, pickle_out)
+    pickle_out.close()

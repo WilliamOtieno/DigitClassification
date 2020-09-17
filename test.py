@@ -1,5 +1,6 @@
 import cv2
 import pickle
+import tensorflow as tf
 
 import numpy as np
 
@@ -22,7 +23,7 @@ cap.set(4, height)
 pickle_in = open("model_trained.p", "rb")
 model = pickle.load(pickle_in)
 
-while True:
+with tf.device('/gpu:0'):
     success, imgOriginal = cap.read()
     img = np.asarray(imgOriginal)
     img = cv2.resize(img, (32, 32))
