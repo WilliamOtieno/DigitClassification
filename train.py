@@ -12,7 +12,6 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten
 from keras.optimizers import Adam
 
-sess = tf.compat.v1.Session()
 
 path = "myData"
 testRatio = 0.2
